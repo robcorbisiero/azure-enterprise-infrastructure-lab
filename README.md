@@ -6,14 +6,14 @@ A hands-on Azure networking project in **Canada Central**. It covers private sub
 | --- | --- | --- |
 | 1 VNet, 3 private subnets, 1 shared NSG | **Zero predicted changes** after aligning the ARM template with the live VNet | **12 locally tested traffic scenarios** and a successful Azure preview in [PR #1](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1) |
 
-[Architecture](#deployed-architecture) · [Change review](#azure-change-review) · [Portal evidence](#azure-portal-evidence) · [Reproduce the checks](#reproduce-the-checks)
+[Architecture](#deployed-architecture) � [Change review](#azure-change-review) � [Portal evidence](#azure-portal-evidence) � [Reproduce the checks](#reproduce-the-checks)
 
 ## Deployed architecture
 
 ```mermaid
 flowchart TB
     NSG["Shared network security group<br/>nsg-enterprise-lab-dev"]
-    subgraph VNET["vnet-enterprise-lab-dev · 10.10.0.0/16"]
+    subgraph VNET["vnet-enterprise-lab-dev � 10.10.0.0/16"]
         direction LR
         SERVERS["Servers<br/>10.10.10.0/24"]
         MGMT["Management<br/>10.10.20.0/24"]
@@ -28,7 +28,7 @@ flowchart TB
     class SERVERS,MGMT,APPS subnet
 ```
 
-**Resource group** `rg-enterprise-lab-dev` · **Region** Canada Central
+**Resource group** `rg-enterprise-lab-dev` � **Region** Canada Central
 
 Dotted lines indicate NSG associations. Each subnet has default outbound access disabled and no NAT gateway attached. The shared NSG uses Azure defaults, which allow traffic within the VNet and deny unmatched inbound traffic.
 
@@ -42,7 +42,7 @@ Dotted lines indicate NSG associations. Each subnet has default outbound access 
 
 The first preview flagged differences in VNet settings and the subnet prefix format. I updated the template to declare the existing values and reran what-if. Azure then predicted zero changes to either baseline resource. [Before-and-after evidence](docs/segmentation.md#verification-status)
 
-The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed local checks. The Azure preview predicted that all three subnets would retain disabled default outbound access. Live traffic tests are pending, and the shared-NSG baseline is what’s deployed. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
+The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed local checks. The Azure preview predicted that all three subnets would retain disabled default outbound access. Live traffic tests are pending, and the shared-NSG baseline is what's deployed. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
 
 ## Azure Portal evidence
 
@@ -52,8 +52,8 @@ Captured on November 21, 2026. Screenshots are cropped to exclude account and su
 
 | Evidence | What to look for |
 | --- | --- |
-| [VNet address space](docs/screenshots/01-vnet-address-space.jpg) · [Subnet inventory](docs/screenshots/02-vnet-subnets.jpg) | The `10.10.0.0/16` VNet and the three `/24` subnets |
-| [Servers](docs/screenshots/03-private-servers.jpg) · [Management](docs/screenshots/03-private-management.jpg) · [Applications](docs/screenshots/03-private-applications.jpg) | Private subnet enabled for each role |
+| [VNet address space](docs/screenshots/01-vnet-address-space.jpg) � [Subnet inventory](docs/screenshots/02-vnet-subnets.jpg) | The `10.10.0.0/16` VNet and the three `/24` subnets |
+| [Servers](docs/screenshots/03-private-servers.jpg) � [Management](docs/screenshots/03-private-management.jpg) � [Applications](docs/screenshots/03-private-applications.jpg) | Private subnet enabled for each role |
 | [Cost snapshot](docs/screenshots/07-cost-snapshot.jpg) | Portal showed `0.00` current and forecast cost at capture |
 
 The lab used an existing Azure trial. This project added no compute, public IP addresses, NAT gateway, or paid network appliances. Azure usage reporting can lag.
@@ -73,3 +73,10 @@ az deployment group what-if \
 ```
 
 See the [operations runbook](docs/runbook.md) for portal verification, design decisions, and the connectivity test plan.
+
+
+## CI and security
+
+Pull requests run offline validation with read-only permissions. GitHub Actions dependencies are reviewed through Dependabot. See [security guidance](SECURITY.md).
+
+See [cost and deployment change control](docs/change-control.md). Any deployment requires explicit approval; CI never deploys Azure resources.
