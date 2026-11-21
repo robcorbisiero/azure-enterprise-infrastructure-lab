@@ -43,3 +43,7 @@ Run the local baseline checks with `python checks/check_network.py`. The checks 
 ```sh
 az deployment group what-if --resource-group rg-enterprise-lab-dev --template-file infra/network.json
 ```
+
+## Proposed subnet segmentation
+
+The [traffic policy and validation plan](docs/segmentation.md) records the current shared-NSG baseline, proposed least-privilege flows, and the status of the Azure what-if preview.
