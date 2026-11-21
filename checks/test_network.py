@@ -22,6 +22,15 @@ class NetworkPolicyTests(unittest.TestCase):
     def test_baseline(self):
         self.validate(self.template)
 
+    def test_duplicate_property_is_rejected(self):
+        body = json.dumps(self.template).replace('"resources":', '"resources": [], "resources":', 1)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "network.json"
+            path.write_text(body)
+            with patch.object(check_network, "TEMPLATE", path):
+                with self.assertRaisesRegex(SystemExit, "Duplicate JSON property: resources"):
+                    check_network.main()
+
     def test_reject_security_and_cost_regressions(self):
         mutations = {
             'extra resource': lambda t: t['resources'].append({'type': 'Microsoft.Compute/virtualMachines', 'name': 'vm'}),
@@ -32,6 +41,8 @@ class NetworkPolicyTests(unittest.TestCase):
             'NSG allow rule': lambda t: t['resources'][0]['properties']['securityRules'].append({'name': 'allow-all'}),
             'overlapping subnet': lambda t: t['resources'][1]['properties']['subnets'][1]['properties'].update(addressPrefixes=['10.10.10.0/24']),
             'missing NSG': lambda t: t['resources'][1]['properties']['subnets'][0]['properties'].update(networkSecurityGroup={'id': 'other'}),
+            'address space drift': lambda t: t['resources'][1]['properties']['addressSpace'].update(extra=True),
+            'template schema drift': lambda t: t.update({'$schema': 'unexpected'}),
             'API drift': lambda t: t['resources'][0].update(apiVersion='2099-01-01'),
         }
         for name, mutate in mutations.items():

@@ -20,9 +20,20 @@ def require(condition, message):
         raise SystemExit(message)
 
 
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        require(key not in result, f"Duplicate JSON property: {key}")
+        result[key] = value
+    return result
+
+
 def main():
-    template = json.loads(TEMPLATE.read_text(encoding="utf-8"))
+    template = json.loads(TEMPLATE.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
     require(set(template) == {"$schema", "contentVersion", "resources"}, "Unexpected template sections.")
+    require(template["$schema"] == "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+            "Expected the resource group deployment schema.")
+    require(template["contentVersion"] == "1.0.0.0", "Unexpected template content version.")
     resources = template["resources"]
     for resource in resources:
         allowed = {"type", "apiVersion", "name", "location", "properties"}
@@ -47,7 +58,7 @@ def main():
     properties = vnet["properties"]
     require(set(properties) == {"addressSpace", "subnets", "encryption", "privateEndpointVNetPolicies"},
             "Unexpected VNet settings; review security and cost implications.")
-    require(properties["addressSpace"]["addressPrefixes"] == ["10.10.0.0/16"], "Unexpected VNet range.")
+    require(properties["addressSpace"] == {"addressPrefixes": ["10.10.0.0/16"]}, "Unexpected VNet range.")
     require(properties["encryption"] == {"enabled": False, "enforcement": "AllowUnencrypted"}, "Unexpected VNet encryption configuration.")
     require(properties["privateEndpointVNetPolicies"] == "Disabled", "Unexpected VNet private endpoint policy.")
     vnet_range = ipaddress.ip_network("10.10.0.0/16")
@@ -73,8 +84,7 @@ def main():
         require(subnet_range.subnet_of(vnet_range), f"{name} must be inside the VNet range.")
         require(not any(subnet_range.overlaps(existing) for existing in ranges), f"{name} overlaps another subnet.")
         require(settings["defaultOutboundAccess"] is False, f"{name} must be private.")
-        require(settings["networkSecurityGroup"]["id"] == NSG_ID, f"{name} must use the lab NSG.")
-        require("natGateway" not in settings, f"{name} must not attach a NAT gateway.")
+        require(settings["networkSecurityGroup"] == {"id": NSG_ID}, f"{name} must use the lab NSG.")
         ranges.append(subnet_range)
 
     print("Verified VNet and subnet ranges, private outbound settings, and NSG associations.")
