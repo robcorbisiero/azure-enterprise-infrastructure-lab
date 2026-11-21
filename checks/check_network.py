@@ -21,7 +21,15 @@ def require(condition, message):
 
 
 def main():
-    resources = json.loads(TEMPLATE.read_text(encoding="utf-8"))["resources"]
+    template = json.loads(TEMPLATE.read_text(encoding="utf-8"))
+    require(set(template) == {"$schema", "contentVersion", "resources"}, "Unexpected template sections.")
+    resources = template["resources"]
+    for resource in resources:
+        allowed = {"type", "apiVersion", "name", "location", "properties"}
+        if resource["type"] == "Microsoft.Network/virtualNetworks":
+            allowed.add("dependsOn")
+        require(set(resource) == allowed, "Unexpected resource fields or nested resources.")
+        require(resource["apiVersion"] == "2024-03-01", "Review API version changes explicitly.")
     by_name = {resource["name"]: resource for resource in resources}
     require(
         len(resources) == 2 and set(by_name) == {NSG_NAME, "vnet-enterprise-lab-dev"},
@@ -32,10 +40,13 @@ def main():
     require(nsg["type"] == "Microsoft.Network/networkSecurityGroups", "Invalid NSG type.")
     require(vnet["type"] == "Microsoft.Network/virtualNetworks", "Invalid VNet type.")
     require(all(r["location"] == "canadacentral" for r in resources), "Unexpected region.")
+    require(set(nsg["properties"]) == {"securityRules"}, "Unexpected NSG settings.")
     require(nsg["properties"]["securityRules"] == [], "Expected Azure default rules only.")
     require(vnet["dependsOn"] == [NSG_ID], "VNet must depend on the lab NSG.")
 
     properties = vnet["properties"]
+    require(set(properties) == {"addressSpace", "subnets", "encryption", "privateEndpointVNetPolicies"},
+            "Unexpected VNet settings; review security and cost implications.")
     require(properties["addressSpace"]["addressPrefixes"] == ["10.10.0.0/16"], "Unexpected VNet range.")
     require(properties["encryption"] == {"enabled": False, "enforcement": "AllowUnencrypted"}, "Unexpected VNet encryption configuration.")
     require(properties["privateEndpointVNetPolicies"] == "Disabled", "Unexpected VNet private endpoint policy.")
@@ -50,7 +61,10 @@ def main():
     ranges = []
     for subnet in subnets:
         name = subnet["name"]
+        require(set(subnet) == {"name", "properties"}, "Unexpected subnet fields.")
         settings = subnet["properties"]
+        require(set(settings) == {"addressPrefixes", "defaultOutboundAccess", "networkSecurityGroup"},
+                f"{name} has unapproved settings, endpoints, or gateways.")
         prefixes = settings["addressPrefixes"]
         require(len(prefixes) == 1, f"{name} must have one IPv4 range.")
         prefix = prefixes[0]
@@ -68,3 +82,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
