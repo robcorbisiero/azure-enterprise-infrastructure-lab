@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-03-01",
+      "name": "nsg-enterprise-lab-dev",
+      "location": "canadacentral",
+      "properties": {
+        "securityRules": []
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2024-03-01",
+      "name": "vnet-enterprise-lab-dev",
+      "location": "canadacentral",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-enterprise-lab-dev')]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.10.0.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "snet-servers",
+            "properties": {
+              "addressPrefix": "10.10.10.0/24",
+              "defaultOutboundAccess": false,
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-enterprise-lab-dev')]"
+              }
+            }
+          },
+          {
+            "name": "snet-management",
+            "properties": {
+              "addressPrefix": "10.10.20.0/24",
+              "defaultOutboundAccess": false,
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-enterprise-lab-dev')]"
+              }
+            }
+          },
+          {
+            "name": "snet-applications",
+            "properties": {
+              "addressPrefix": "10.10.30.0/24",
+              "defaultOutboundAccess": false,
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-enterprise-lab-dev')]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
