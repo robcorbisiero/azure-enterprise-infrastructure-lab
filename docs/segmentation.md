@@ -25,7 +25,14 @@ The application is assumed to expose HTTPS on TCP 443. Management must use a ded
 
 ## Verification status
 
-The local template check passed. An Azure what-if run was attempted on November 21, 2026. The browser could open the Cloud Shell pane but could not start Bash, so Azure returned no deployment prediction. No template or NSG rule changes were applied. The traffic expectations above have not been tested against live workloads.
+The local template check passed. On November 21, 2026, Azure ARM what-if succeeded against `rg-enterprise-lab-dev` using [the checked-in template](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/blob/22098db3050e98fab3cb074a57323e41bc8188a9/infra/network.json). The preview ran in ephemeral Cloud Shell without attaching a storage account. It predicted zero creates, zero resource deletions, one unchanged resource, and one modification.
+
+| Resource | Prediction | Observed differences |
+| --- | --- | --- |
+| `nsg-enterprise-lab-dev` | No change | None |
+| `vnet-enterprise-lab-dev` | Modify | The preview flagged omitted VNet encryption settings (`enabled: false`, `AllowUnencrypted`) and the omitted VNet private endpoint policy (`Disabled`) as property deletions. The three CIDRs appear as `addressPrefixes` lists in the live resource and as singular `addressPrefix` fields in the template. CIDR values matched, and all three subnets retained `defaultOutboundAccess: false` in the prediction. |
+
+This is a sanitized summary of a preview. Azure did not apply the template or change any NSG rules. The proposed traffic policy has not been tested on live workloads.
 
 From an authenticated Azure CLI session, run this read-only preview from the repository root.
 
