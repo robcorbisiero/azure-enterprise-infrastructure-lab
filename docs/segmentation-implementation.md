@@ -23,4 +23,16 @@ The policy test reads the ARM rules directly and evaluates priority, protocol, s
 
 The original [baseline template](../infra/network.json) is the rollback reference for the shared NSG associations. If this variant is approved, use incremental deployment and preview the exact target first. Expect three new NSGs and a subnet association change on the VNet. Review any additional predictions before proceeding. Restoring the baseline associations leaves the extra NSGs available for separately reviewed cleanup.
 
-The proposed template has not been deployed to Azure. The live [what-if evidence](segmentation.md#follow-up-preview) applies to the shared-NSG baseline only.
+## Azure what-if evidence
+
+On November 21, 2026, Azure ARM what-if succeeded in Incremental mode against `rg-enterprise-lab-dev` using the [exact proposed template](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/blob/9dc0ae7d5d5d98bae97d6f4c70d1dd75926659c3/infra/segmented-network.json).
+
+| Prediction | Resource | Detail |
+| --- | --- | --- |
+| Create | `nsg-applications-lab-dev` | Attach to `snet-applications` |
+| Create | `nsg-management-lab-dev` | Attach to `snet-management` |
+| Create | `nsg-servers-lab-dev` | Attach to `snet-servers` |
+| Modify | `vnet-enterprise-lab-dev` | Azure flagged only the subnet array. Each subnet is predicted to use its dedicated NSG and retain `defaultOutboundAccess: false`. |
+| Ignore | `nsg-enterprise-lab-dev` | Existing shared NSG is outside the proposed template. |
+
+Azure predicted zero resource deletions. This was a read-only preview. The proposal has not been deployed or tested with live traffic. See the [separate baseline preview](segmentation.md#follow-up-preview) for the current shared-NSG deployment.
