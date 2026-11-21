@@ -60,10 +60,11 @@ The lab used an existing Azure trial. This project added no compute, public IP a
 
 ## Reproduce the checks
 
-The [baseline ARM template](infra/network.json) targets an existing resource group. The local check uses only the Python 3 standard library. Azure what-if requires an authenticated Azure CLI session and previews changes without applying them.
+The [baseline ARM template](infra/network.json) targets an existing resource group. The local check uses only the Python 3 standard library. The regression suite mutates copies of the template and checks that CI rejects ambiguous JSON, extra resources, lost NSG associations, and changes to private outbound settings. Azure what-if requires an authenticated Azure CLI session and previews changes without applying them.
 
 ```bash
 python checks/check_network.py
+python -m unittest discover -s checks -v
 
 az deployment group what-if \
   --resource-group rg-enterprise-lab-dev \
