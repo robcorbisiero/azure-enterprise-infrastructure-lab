@@ -29,7 +29,9 @@
           {
             "name": "snet-servers",
             "properties": {
-              "addressPrefix": "10.10.10.0/24",
+              "addressPrefixes": [
+                "10.10.10.0/24"
+              ],
               "defaultOutboundAccess": false,
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-enterprise-lab-dev')]"
@@ -39,7 +41,9 @@
           {
             "name": "snet-management",
             "properties": {
-              "addressPrefix": "10.10.20.0/24",
+              "addressPrefixes": [
+                "10.10.20.0/24"
+              ],
               "defaultOutboundAccess": false,
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-enterprise-lab-dev')]"
@@ -49,14 +53,21 @@
           {
             "name": "snet-applications",
             "properties": {
-              "addressPrefix": "10.10.30.0/24",
+              "addressPrefixes": [
+                "10.10.30.0/24"
+              ],
               "defaultOutboundAccess": false,
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-enterprise-lab-dev')]"
               }
             }
           }
-        ]
+        ],
+        "encryption": {
+          "enabled": false,
+          "enforcement": "AllowUnencrypted"
+        },
+        "privateEndpointVNetPolicies": "Disabled"
       }
     }
   ]

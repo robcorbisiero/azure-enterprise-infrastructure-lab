@@ -37,6 +37,8 @@ def main():
 
     properties = vnet["properties"]
     require(properties["addressSpace"]["addressPrefixes"] == ["10.10.0.0/16"], "Unexpected VNet range.")
+    require(properties["encryption"] == {"enabled": False, "enforcement": "AllowUnencrypted"}, "Unexpected VNet encryption configuration.")
+    require(properties["privateEndpointVNetPolicies"] == "Disabled", "Unexpected VNet private endpoint policy.")
     vnet_range = ipaddress.ip_network("10.10.0.0/16")
     subnets = properties["subnets"]
     require(
@@ -49,7 +51,9 @@ def main():
     for subnet in subnets:
         name = subnet["name"]
         settings = subnet["properties"]
-        prefix = settings["addressPrefix"]
+        prefixes = settings["addressPrefixes"]
+        require(len(prefixes) == 1, f"{name} must have one IPv4 range.")
+        prefix = prefixes[0]
         require(prefix == EXPECTED_SUBNETS[name], f"{name} has an unexpected range.")
         subnet_range = ipaddress.ip_network(prefix)
         require(subnet_range.subnet_of(vnet_range), f"{name} must be inside the VNet range.")

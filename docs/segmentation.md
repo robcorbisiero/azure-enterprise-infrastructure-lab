@@ -34,6 +34,18 @@ The local template check passed. On November 21, 2026, Azure ARM what-if succeed
 
 This is a sanitized summary of a preview. Azure did not apply the template or change any NSG rules. The proposed traffic policy has not been tested on live workloads.
 
+### Follow-up preview
+
+The aligned template explicitly declares the existing VNet encryption and private endpoint policy values and uses `addressPrefixes` lists for the three subnets. The local baseline check passed.
+
+| ARM what-if prediction | Original template | Aligned template |
+| --- | --- | --- |
+| VNet | Modify | NoChange |
+| Shared NSG | NoChange | NoChange |
+| Resource creations or deletions | 0 | 0 |
+
+The follow-up succeeded on November 21, 2026 and predicted no changes for either resource. The exact previewed template has SHA-256 `779016fb62653a3bb6b631302dfc951cf3ac9fccf0577cf9a323c3c637d28ef1`. Both runs were previews only.
+
 From an authenticated Azure CLI session, run this read-only preview from the repository root.
 
 ```sh

@@ -2,6 +2,8 @@
 
 I built and verified a private network foundation in Azure Canada Central as a hands-on infrastructure lab. The project demonstrates IPv4 subnet planning, Azure network security groups, cost-aware provisioning, and infrastructure as code.
 
+**Azure-verified result.** The first ARM what-if flagged VNet differences. After aligning the template with the live settings, Azure predicted zero changes across the VNet and NSG. [See the before-and-after evidence](docs/segmentation.md#follow-up-preview).
+
 ## Deployed network
 
 - Resource group `rg-enterprise-lab-dev`
@@ -46,4 +48,4 @@ az deployment group what-if --resource-group rg-enterprise-lab-dev --template-fi
 
 ## Proposed subnet segmentation
 
-The [traffic policy and validation plan](docs/segmentation.md) records the current shared-NSG baseline, proposed least-privilege flows, and the status of the Azure what-if preview.
+The [traffic policy and validation plan](docs/segmentation.md) records the current shared-NSG baseline, proposed least-privilege flows, and the before-and-after Azure what-if results.
