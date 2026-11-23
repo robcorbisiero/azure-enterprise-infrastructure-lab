@@ -12,6 +12,32 @@ Canada Central, two on-demand Ubuntu 22.04 LTS `Standard_D2als_v7` VMs, two 32 G
 
 Azure Retail Prices API listed CA$0.1258 per VM-hour and CA$3.7059 per E4 disk-month, plus CA$0.0028 per 10,000 disk operations, on November 23, 2026. Two hours of compute and prorated disk capacity are roughly CA$0.52 before disk transactions and any diagnostics meters. Set a CA$5 credit budget for the session as a planning ceiling. This estimate is not a hard cap. Before provisioning, confirm the free trial spending limit is enabled, verify regional SKU availability and the deployment estimate, and get approval for the exact scope. Do not upgrade the subscription for this lab.
 
+## Deploy and clean up
+
+In Azure Cloud Shell (Bash), clone this repository, sign in to the intended Azure subscription, and have an RSA SSH public key available. Confirm credits, regional quota, and pricing before deployment. Use your subscription ID in these commands.
+
+```bash
+python3 lab/incident/manage.py check
+python3 lab/incident/manage.py deploy --subscription "$AZURE_SUBSCRIPTION_ID" --ssh-public-key ~/.ssh/id_rsa.pub
+```
+
+The deploy command creates an isolated resource group, runs ARM provider validation, and shows what-if before asking for deployment approval. If deployment fails or is interrupted, inspect that group and run cleanup. The script refuses to deploy into an existing group. The checked-in network template is the exact reviewed Git blob.
+
+For recovery after observing the incident, use the network template alone in incremental mode:
+
+```bash
+az deployment group what-if --subscription "$AZURE_SUBSCRIPTION_ID" -g rg-azure-nsg-incident-lab --mode Incremental -f lab/incident/network.json
+az deployment group create --subscription "$AZURE_SUBSCRIPTION_ID" -g rg-azure-nsg-incident-lab --mode Incremental -f lab/incident/network.json
+```
+
+After collecting evidence, run:
+
+```bash
+python3 lab/incident/manage.py cleanup --subscription "$AZURE_SUBSCRIPTION_ID"
+```
+
+Cleanup checks the exact group name and purpose tag, then verifies that the group is absent. GitHub Actions runs the offline build and input check without Azure credentials. Provider validation and what-if run during the manual deployment.
+
 ## Provision and observe
 
 1. Create an isolated resource group named `rg-azure-nsg-incident-lab` in Canada Central. Ensure it is newly created for this exercise. Preview and then deploy the [segmented ARM template at the reviewed commit](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/blob/03385c171e41ec9a8a5ede1a92a15393e15c5708/infra/segmented-network.json) in incremental mode. Keep this template unchanged for recovery.

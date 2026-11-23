@@ -8,6 +8,8 @@ A hands-on Azure networking project in **Canada Central**. It covers private sub
 
 [Architecture](#deployed-architecture) � [Change review](#azure-change-review) � [Portal evidence](#azure-portal-evidence) � [Reproduce the checks](#reproduce-the-checks)
 
+**Live incident result.** Two private Ubuntu VMs reproduced an Azure NSG outage. Network Watcher identified the deny rule, and ARM restored TCP 443 access. The first successful probe followed the first timeout by **78 seconds**. Azure confirmed cleanup. [Architecture](#deployed-architecture) · [Incident evidence and runbook](docs/nsg-incident-lab.md#live-results) · [Deployment and cleanup](docs/nsg-incident-lab.md#deploy-and-clean-up)
+
 ## Deployed architecture
 
 ```mermaid
@@ -42,7 +44,7 @@ Dotted lines indicate NSG associations. Each subnet has default outbound access 
 
 The first preview flagged differences in VNet settings and the subnet prefix format. I updated the template to declare the existing values and reran what-if. Azure then predicted zero changes to either baseline resource. [Before-and-after evidence](docs/segmentation.md#verification-status)
 
-The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed local checks. The Azure preview predicted that all three subnets would retain disabled default outbound access. The original environment uses the shared NSG. The private server-to-app path was tested in the disposable lab below. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
+The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed local checks. The Azure preview predicted that all three subnets would retain disabled default outbound access. The original environment uses the shared NSG. The disposable lab verified the private server-to-app path. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
 
 ## Live incident exercise
 
