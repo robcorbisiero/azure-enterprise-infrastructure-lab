@@ -42,11 +42,11 @@ Dotted lines indicate NSG associations. Each subnet has default outbound access 
 
 The first preview flagged differences in VNet settings and the subnet prefix format. I updated the template to declare the existing values and reran what-if. Azure then predicted zero changes to either baseline resource. [Before-and-after evidence](docs/segmentation.md#verification-status)
 
-The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed local checks. The Azure preview predicted that all three subnets would retain disabled default outbound access. Live traffic tests are pending, and the shared-NSG baseline is what's deployed. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
+The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed local checks. The Azure preview predicted that all three subnets would retain disabled default outbound access. The original environment uses the shared NSG. The private server-to-app path was tested in the disposable lab below. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
 
 ## Live incident exercise
 
-The [NSG incident and recovery lab](docs/nsg-incident-lab.md) defines a two-VM exercise for reproducing an access outage, identifying the effective deny rule, and restoring access from the reviewed template. Live results are pending.
+The [live NSG incident and recovery lab](docs/nsg-incident-lab.md) verified private TCP 443 access, reproduced an outage by removing one NSG rule, then restored access with the reviewed ARM template. The first successful probe followed the first timeout by **78 seconds**. Network Watcher identified the rule in each phase, the final ARM preview showed zero network changes, and Azure confirmed cleanup.
 
 ## Azure Portal evidence
 
