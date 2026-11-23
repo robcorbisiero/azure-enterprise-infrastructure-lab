@@ -56,6 +56,16 @@ Cleanup checks the exact group name and purpose tag, then verifies that the grou
 
 ## Live results
 
+### Azure Activity Log screenshots
+
+**Incident.** Azure recorded the security rule deletion and a subsequent IP flow verification call.
+
+![Azure Activity Log showing security rule deletion and IP flow verification](screenshots/azure-nsg-incident.png)
+
+**Recovery.** Azure recorded the NSG update and a subsequent IP flow verification call. The screenshots show operation status. The table below records the traffic outcomes and matching rules.
+
+![Azure Activity Log showing the NSG update and IP flow verification](screenshots/azure-nsg-recovery.png)
+
 Two Ubuntu 22.04 LTS `Standard_D2als_v7` VMs passed ARM provider validation and deployed in Canada Central. Earlier `Standard_B2s` attempts in Canada Central and Canada East failed validation with `SkuNotAvailable` despite sufficient quota.
 
 | Phase (UTC, November 23, 2026) | Fresh guest TCP probe | Network Watcher IP flow verify |
