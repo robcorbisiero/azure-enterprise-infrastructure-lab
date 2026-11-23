@@ -1,0 +1,175 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-03-01",
+      "name": "nsg-servers-lab-dev",
+      "location": "canadacentral",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-management-ssh",
+            "properties": {
+              "priority": 100,
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "10.10.20.4",
+              "destinationAddressPrefix": "10.10.10.4",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "protocol": "Tcp"
+            }
+          },
+          {
+            "name": "deny-other-inbound",
+            "properties": {
+              "priority": 300,
+              "access": "Deny",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "protocol": "*"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-03-01",
+      "name": "nsg-management-lab-dev",
+      "location": "canadacentral",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "deny-other-inbound",
+            "properties": {
+              "priority": 300,
+              "access": "Deny",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "protocol": "*"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-03-01",
+      "name": "nsg-applications-lab-dev",
+      "location": "canadacentral",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-management-ssh",
+            "properties": {
+              "priority": 100,
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "10.10.20.4",
+              "destinationAddressPrefix": "10.10.30.4",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "protocol": "Tcp"
+            }
+          },
+          {
+            "name": "allow-server-https",
+            "properties": {
+              "priority": 110,
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "10.10.10.4",
+              "destinationAddressPrefix": "10.10.30.4",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "protocol": "Tcp"
+            }
+          },
+          {
+            "name": "deny-other-inbound",
+            "properties": {
+              "priority": 300,
+              "access": "Deny",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "protocol": "*"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2024-03-01",
+      "name": "vnet-enterprise-lab-dev",
+      "location": "canadacentral",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-servers-lab-dev')]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-management-lab-dev')]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-applications-lab-dev')]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.10.0.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "snet-servers",
+            "properties": {
+              "addressPrefixes": [
+                "10.10.10.0/24"
+              ],
+              "defaultOutboundAccess": false,
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-servers-lab-dev')]"
+              }
+            }
+          },
+          {
+            "name": "snet-management",
+            "properties": {
+              "addressPrefixes": [
+                "10.10.20.0/24"
+              ],
+              "defaultOutboundAccess": false,
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-management-lab-dev')]"
+              }
+            }
+          },
+          {
+            "name": "snet-applications",
+            "properties": {
+              "addressPrefixes": [
+                "10.10.30.0/24"
+              ],
+              "defaultOutboundAccess": false,
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-applications-lab-dev')]"
+              }
+            }
+          }
+        ],
+        "encryption": {
+          "enabled": false,
+          "enforcement": "AllowUnencrypted"
+        },
+        "privateEndpointVNetPolicies": "Disabled"
+      }
+    }
+  ]
+}
