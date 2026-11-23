@@ -1,0 +1,45 @@
+#cloud-config
+write_files:
+  - path: /usr/local/lib/azure-incident-lab.py
+    permissions: '0644'
+    content: |
+      from datetime import datetime, timezone
+      from socket import create_connection
+      from time import sleep
+      
+      
+      def check(host, port):
+          try:
+              with create_connection((host, port), timeout=3) as sock:
+                  with sock.makefile("rb") as reply:
+                      return "PASS" if reply.readline(64) == b"azure-lab-ready\n" else "UNEXPECTED_REPLY"
+          except OSError as error:
+              return type(error).__name__
+      
+      
+      if __name__ == "__main__":
+          while True:
+              for port in (443, 8443):
+                  now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+                  print(f"{now} tcp=10.10.30.4:{port} result={check('10.10.30.4', port)}", flush=True)
+              sleep(20)
+  - path: /etc/systemd/system/azure-incident-lab.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Azure private networking incident lab
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      ExecStart=/usr/bin/python3 -u /usr/local/lib/azure-incident-lab.py
+      StandardOutput=journal+console
+      StandardError=journal+console
+      Restart=on-failure
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - [systemctl, daemon-reload]
+  - [systemctl, enable, --now, azure-incident-lab.service]

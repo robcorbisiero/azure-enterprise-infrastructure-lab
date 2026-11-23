@@ -44,6 +44,10 @@ The first preview flagged differences in VNet settings and the subnet prefix for
 
 The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed local checks. The Azure preview predicted that all three subnets would retain disabled default outbound access. Live traffic tests are pending, and the shared-NSG baseline is what's deployed. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
 
+## Live incident exercise
+
+The [NSG incident and recovery lab](docs/nsg-incident-lab.md) defines a two-VM exercise for reproducing an access outage, identifying the effective deny rule, and restoring access from the reviewed template. Live results are pending.
+
 ## Azure Portal evidence
 
 ![Azure Portal showing the shared network security group associated with all three lab subnets](docs/screenshots/06-nsg-associations.jpg)
