@@ -1,16 +1,30 @@
 # Azure Enterprise Infrastructure Lab
 
-A hands-on Azure networking project in **Canada Central**. It covers private subnet design, network security groups, and infrastructure change review with Azure Resource Manager (ARM) what-if.
+**Azure NSG outage reproduced and recovered in 78 seconds between probes.** In Canada Central, two private Ubuntu VMs verified the server-to-app path. Removing one NSG rule caused TCP 443 to time out while the app stayed up. Network Watcher identified the deny rule, and redeploying the reviewed ARM template restored access.
 
-| Deployed baseline | Azure-verified result | Security proposal |
+| Phase | Guest probe on TCP 443 | Network Watcher rule |
 | --- | --- | --- |
-| 1 VNet, 3 private subnets, 1 shared NSG | **Zero predicted changes** after aligning the ARM template with the live VNet | **12 locally tested traffic scenarios** and a successful Azure preview in [PR #1](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1) |
+| Baseline | Passed | Allow via `allow-server-https` |
+| Outage | Timed out | Deny via `deny-other-inbound` |
+| Recovery | Passed 78 seconds after the first timeout | Allow via `allow-server-https` |
 
-[Architecture](#deployed-architecture) / [Change review](#azure-change-review) / [Portal evidence](#azure-portal-evidence) / [Reproduce the checks](#reproduce-the-checks)
+The final ARM what-if showed zero changes across the VNet and its three NSGs. Azure confirmed deletion of the temporary resource group.
 
-**Live incident result.** Two private Ubuntu VMs reproduced an Azure NSG outage. Network Watcher identified the deny rule, and ARM restored TCP 443 access. The first successful probe followed the first timeout by **78 seconds**. Azure confirmed cleanup. [Architecture](#deployed-architecture) · [Incident evidence and runbook](docs/nsg-incident-lab.md#live-results) · [Deployment and cleanup](docs/nsg-incident-lab.md#deploy-and-clean-up)
+[Incident evidence and runbook](docs/nsg-incident-lab.md#live-results) / [Deploy and clean up](docs/nsg-incident-lab.md#deploy-and-clean-up) / [Original baseline](#original-network-baseline)
 
-## Deployed architecture
+## Live incident architecture
+
+```mermaid
+flowchart LR
+    CLIENT["Client VM (10.10.10.4)"] -->|"Fresh TCP 443 probes"| NSG["Application subnet NSG"]
+    NSG -->|"Permitted traffic"| APP["App VM (10.10.30.4)"]
+```
+
+The two VMs ran in separate private subnets with dedicated subnet NSGs. TCP 8443 served as the blocked control while its app listener stayed up. The [timestamped probe results](docs/nsg-incident-lab.md#live-results) show both ports.
+
+## Original network baseline
+
+The original environment consists of one VNet, three private subnets, and one shared NSG.
 
 ```mermaid
 flowchart TB
@@ -44,25 +58,22 @@ Dotted lines indicate NSG associations. Each subnet has default outbound access 
 
 The first preview flagged differences in VNet settings and the subnet prefix format. I updated the template to declare the existing values and reran what-if. Azure then predicted zero changes to either baseline resource. [Before-and-after evidence](docs/segmentation.md#verification-status)
 
-The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed local checks. The Azure preview predicted that all three subnets would retain disabled default outbound access. The original environment uses the shared NSG. The disposable lab verified the private server-to-app path. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
+The open segmentation PR proposes narrow SSH and HTTPS allowances and a deny rule for other new inbound traffic. The proposed rules passed 12 local traffic scenarios. The Azure preview predicted that all three subnets would retain disabled default outbound access. The original environment uses the shared NSG. The disposable lab verified the private server-to-app path. [Rules, tests, and preview evidence](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1)
 
-## Live incident exercise
-
-The [live NSG incident and recovery lab](docs/nsg-incident-lab.md) verified private TCP 443 access, reproduced an outage by removing one NSG rule, then restored access with the reviewed ARM template. The first successful probe followed the first timeout by **78 seconds**. Network Watcher identified the rule in each phase, the final ARM preview showed zero network changes, and Azure confirmed cleanup.
-
-## Azure Portal evidence
+## Azure evidence
 
 ![Azure Portal showing the shared network security group associated with all three lab subnets](docs/screenshots/06-nsg-associations.jpg)
 
-Captured on November 21, 2026. Screenshots are cropped to exclude account and subscription identifiers.
+The screenshot shows the original baseline on November 21, 2026. The live incident has its own Activity Log captures.
 
 | Evidence | What to look for |
 | --- | --- |
 | [VNet address space](docs/screenshots/01-vnet-address-space.jpg) / [Subnet inventory](docs/screenshots/02-vnet-subnets.jpg) | The `10.10.0.0/16` VNet and the three `/24` subnets |
 | [Servers](docs/screenshots/03-private-servers.jpg) / [Management](docs/screenshots/03-private-management.jpg) / [Applications](docs/screenshots/03-private-applications.jpg) | Private subnet enabled for each role |
+| [Incident and recovery](docs/nsg-incident-lab.md#azure-activity-log-screenshots) | Activity Log screenshots and the runbook's timestamped probe results |
 | [Cost snapshot](docs/screenshots/07-cost-snapshot.jpg) | Portal showed `0.00` current and forecast cost at capture |
 
-The lab used an existing Azure trial. This project added no compute, public IP addresses, NAT gateway, or paid network appliances. Azure usage reporting can lag.
+The original network baseline contained only networking resources. The live exercise used two temporary VMs on the existing Azure trial. Azure confirmed deletion of both VMs with their resource group. The exercise used private IPs without a NAT gateway.
 
 ## Reproduce the checks
 
