@@ -1,0 +1,47 @@
+#cloud-config
+write_files:
+  - path: /usr/local/lib/azure-incident-lab.py
+    permissions: '0644'
+    content: |
+      from socketserver import BaseRequestHandler, ThreadingTCPServer
+      from threading import Thread
+      from time import sleep
+      
+      
+      class ProbeHandler(BaseRequestHandler):
+          def handle(self):
+              self.request.sendall(b"azure-lab-ready\n")
+      
+      
+      def main():
+          with ThreadingTCPServer(("0.0.0.0", 443), ProbeHandler) as primary:
+              with ThreadingTCPServer(("0.0.0.0", 8443), ProbeHandler) as control:
+                  for server in (primary, control):
+                      Thread(target=server.serve_forever, daemon=True).start()
+                  while True:
+                      print("azure-lab listeners ready tcp=443,8443", flush=True)
+                      sleep(30)
+      
+      
+      if __name__ == "__main__":
+          main()
+  - path: /etc/systemd/system/azure-incident-lab.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Azure private networking incident lab
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      ExecStart=/usr/bin/python3 -u /usr/local/lib/azure-incident-lab.py
+      StandardOutput=journal+console
+      StandardError=journal+console
+      Restart=on-failure
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - [systemctl, daemon-reload]
+  - [systemctl, enable, --now, azure-incident-lab.service]
