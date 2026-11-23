@@ -6,7 +6,7 @@ A hands-on Azure networking project in **Canada Central**. It covers private sub
 | --- | --- | --- |
 | 1 VNet, 3 private subnets, 1 shared NSG | **Zero predicted changes** after aligning the ARM template with the live VNet | **12 locally tested traffic scenarios** and a successful Azure preview in [PR #1](https://github.com/robcorbisiero/azure-enterprise-infrastructure-lab/pull/1) |
 
-[Architecture](#deployed-architecture) � [Change review](#azure-change-review) � [Portal evidence](#azure-portal-evidence) � [Reproduce the checks](#reproduce-the-checks)
+[Architecture](#deployed-architecture) / [Change review](#azure-change-review) / [Portal evidence](#azure-portal-evidence) / [Reproduce the checks](#reproduce-the-checks)
 
 **Live incident result.** Two private Ubuntu VMs reproduced an Azure NSG outage. Network Watcher identified the deny rule, and ARM restored TCP 443 access. The first successful probe followed the first timeout by **78 seconds**. Azure confirmed cleanup. [Architecture](#deployed-architecture) · [Incident evidence and runbook](docs/nsg-incident-lab.md#live-results) · [Deployment and cleanup](docs/nsg-incident-lab.md#deploy-and-clean-up)
 
@@ -15,7 +15,7 @@ A hands-on Azure networking project in **Canada Central**. It covers private sub
 ```mermaid
 flowchart TB
     NSG["Shared network security group<br/>nsg-enterprise-lab-dev"]
-    subgraph VNET["vnet-enterprise-lab-dev � 10.10.0.0/16"]
+    subgraph VNET["vnet-enterprise-lab-dev (10.10.0.0/16)"]
         direction LR
         SERVERS["Servers<br/>10.10.10.0/24"]
         MGMT["Management<br/>10.10.20.0/24"]
@@ -30,7 +30,7 @@ flowchart TB
     class SERVERS,MGMT,APPS subnet
 ```
 
-**Resource group** `rg-enterprise-lab-dev` � **Region** Canada Central
+**Resource group** `rg-enterprise-lab-dev` / **Region** Canada Central
 
 Dotted lines indicate NSG associations. Each subnet has default outbound access disabled and no NAT gateway attached. The shared NSG uses Azure defaults, which allow traffic within the VNet and deny unmatched inbound traffic.
 
@@ -58,8 +58,8 @@ Captured on November 21, 2026. Screenshots are cropped to exclude account and su
 
 | Evidence | What to look for |
 | --- | --- |
-| [VNet address space](docs/screenshots/01-vnet-address-space.jpg) � [Subnet inventory](docs/screenshots/02-vnet-subnets.jpg) | The `10.10.0.0/16` VNet and the three `/24` subnets |
-| [Servers](docs/screenshots/03-private-servers.jpg) � [Management](docs/screenshots/03-private-management.jpg) � [Applications](docs/screenshots/03-private-applications.jpg) | Private subnet enabled for each role |
+| [VNet address space](docs/screenshots/01-vnet-address-space.jpg) / [Subnet inventory](docs/screenshots/02-vnet-subnets.jpg) | The `10.10.0.0/16` VNet and the three `/24` subnets |
+| [Servers](docs/screenshots/03-private-servers.jpg) / [Management](docs/screenshots/03-private-management.jpg) / [Applications](docs/screenshots/03-private-applications.jpg) | Private subnet enabled for each role |
 | [Cost snapshot](docs/screenshots/07-cost-snapshot.jpg) | Portal showed `0.00` current and forecast cost at capture |
 
 The lab used an existing Azure trial. This project added no compute, public IP addresses, NAT gateway, or paid network appliances. Azure usage reporting can lag.
